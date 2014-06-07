@@ -26,10 +26,34 @@ func TestLog2(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	table := New(1000, 0)
-	table.func1 = one
-	table.func2 = two
+	table.hash1 = one
+	table.hash2 = two
 
 	if s := table.Size(); s != 1000 {
 		t.Errorf("Table was not expected size.")
+	}
+}
+
+func TestInsert(t *testing.T) {
+	table := New(22, 0)
+	table.hash1 = one
+	table.hash2 = two
+
+	table.Insert(Element{20})
+
+	if table.table1[9].Value != 20 {
+		t.Errorf("Table did not insert into expected row.")
+	}
+	if table.table2[1].Value != nil {
+		t.Errorf("Second table should not have been modified.")
+	}
+
+	table.Insert(Element{31})
+
+	if table.table1[9].Value != 31 {
+		t.Errorf("Table should have overwritten original value.")
+	}
+	if table.table2[1].Value != 20 {
+		t.Errorf("First value should have been inserted into second table.")
 	}
 }

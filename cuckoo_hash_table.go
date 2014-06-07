@@ -1,16 +1,18 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"time"
 )
 
 type CuckooHashTable struct {
-	table []Element
+	table1 []Element
+	table2 []Element
 
 	rand  *rand.Rand
-	func1 HashFunc
-	func2 HashFunc
+	hash1 HashFunc
+	hash2 HashFunc
 }
 
 func log2(size int) uint {
@@ -49,16 +51,43 @@ func New(size int, seed int64) *CuckooHashTable {
 	}
 	r = rand.New(rand.NewSource(seed))
 
-	func1, func2 := generateHashFunction(r, size), generateHashFunction(r, size)
+	hash1, hash2 := generateHashFunction(r, size/2), generateHashFunction(r, size/2)
 	table := CuckooHashTable{
-		table: make([]Element, size),
-		func1: func1,
-		func2: func2,
-		rand:  r,
+		table1: make([]Element, size/2),
+		table2: make([]Element, size/2),
+		hash1:  hash1,
+		hash2:  hash2,
+		rand:   r,
 	}
 	return &table
 }
 
 func (ht *CuckooHashTable) Size() int {
-	return len(ht.table)
+	return len(ht.table1) * 2
+}
+
+func (ht *CuckooHashTable) Insert(elem Element) {
+	var displacedElem Element
+
+	k1 := ht.hash1(elem)
+	log.Printf("Inserting %v into table (k1 = %d)", elem, k1)
+	if ht.table1[k1].Value == nil {
+		log.Printf("Setting table1[%d] = %v", k1, elem.Value)
+		ht.table1[k1] = elem
+		return
+	}
+
+	displacedElem = ht.table1[k1]
+	log.Printf("Setting table1[%d] = %v (cuckoo)", k1, elem.Value)
+	ht.table1[k1] = elem
+	elem = displacedElem
+	k2 := ht.hash2(elem)
+
+	log.Printf("Inserting %v into table (k2 = %d)", elem, k2)
+
+	if ht.table2[k2].Value == nil {
+		log.Printf("Setting table2[%d] = %v", k2, elem.Value)
+		ht.table2[k2] = elem
+		return
+	}
 }
