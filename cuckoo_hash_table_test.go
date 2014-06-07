@@ -58,6 +58,19 @@ func TestInsert(t *testing.T) {
 	}
 }
 
+func TestInsertTwice(t *testing.T) {
+	table := New(22, 0)
+	table.hash1 = one
+	table.hash2 = two
+
+	table.Insert(Element{20})
+	table.Insert(Element{20})
+
+	if table.table2[1].Value != nil {
+		t.Errorf("Should not have populated second table on duplicate insert.")
+	}
+}
+
 func TestInsertAndContains(t *testing.T) {
 	table := New(22, 0)
 	table.hash1 = one
@@ -94,5 +107,23 @@ func TestRemove(t *testing.T) {
 
 	if table.Contains(Element{20}) {
 		t.Errorf("Table should have removed element.")
+	}
+}
+
+func TestInsertNeedsToLoop(t *testing.T) {
+	table := New(22, 0)
+	table.hash1 = one
+	table.hash2 = two
+
+	items := []int{20, 50, 53, 75, 100, 67, 105, 3, 36, 39}
+
+	for _, item := range items {
+		table.Insert(Element{item})
+	}
+
+	for _, item := range items {
+		if !table.Contains(Element{item}) {
+			t.Errorf("Table should have contained element.")
+		}
 	}
 }

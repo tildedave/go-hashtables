@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const MAX_LOOPS = 10
+
 type CuckooHashTable struct {
 	table1 []Element
 	table2 []Element
@@ -67,31 +69,43 @@ func (ht *CuckooHashTable) Size() int {
 }
 
 func (ht *CuckooHashTable) Insert(elem Element) {
+	if ht.Contains(elem) {
+		return
+	}
+
 	var displacedElem Element
 
-	k1 := ht.hash1(elem)
-	log.Printf("Inserting %v into table (k1 = %d)", elem, k1)
-	if ht.table1[k1].Value == nil {
-		log.Printf("Setting table1[%d] = %v", k1, elem.Value)
+	loop := 0
+	for ; loop < MAX_LOOPS; loop++ {
+		k1 := ht.hash1(elem)
+		log.Printf("Inserting %v into table (k1 = %d)", elem, k1)
+		if ht.table1[k1].Value == nil {
+			log.Printf("Setting table1[%d] = %v", k1, elem)
+			ht.table1[k1] = elem
+			return
+		}
+
+		displacedElem = ht.table1[k1]
+		log.Printf("Setting table1[%d] = %v, displacing %v (cuckoo)", k1, elem, displacedElem)
 		ht.table1[k1] = elem
-		return
-	}
+		elem = displacedElem
+		k2 := ht.hash2(elem)
 
-	displacedElem = ht.table1[k1]
-	log.Printf("Setting table1[%d] = %v (cuckoo)", k1, elem.Value)
-	ht.table1[k1] = elem
-	elem = displacedElem
-	k2 := ht.hash2(elem)
+		log.Printf("Inserting %v into table (k2 = %d)", elem, k2)
 
-	log.Printf("Inserting %v into table (k2 = %d)", elem, k2)
+		if ht.table2[k2].Value == nil {
+			log.Printf("Setting table2[%d] = %v", k2, elem)
+			ht.table2[k2] = elem
+			return
+		}
 
-	if ht.table2[k2].Value == nil {
-		log.Printf("Setting table2[%d] = %v", k2, elem.Value)
+		displacedElem = ht.table2[k2]
+		log.Printf("Setting table2[%d] = %v, displacing %v (cuckoo)", k2, elem, displacedElem)
 		ht.table2[k2] = elem
-		return
+		elem = displacedElem
 	}
 
-	// TODO: loops
+	panic("Needed to rebuild hash table")
 }
 
 func (ht *CuckooHashTable) Contains(elem Element) bool {
