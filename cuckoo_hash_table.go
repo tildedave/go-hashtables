@@ -90,4 +90,18 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 		ht.table2[k2] = elem
 		return
 	}
+
+	// TODO: loops
+}
+
+func (ht *CuckooHashTable) Contains(elem Element) bool {
+	k1, k2 := ht.hash1(elem), ht.hash2(elem)
+
+	if ht.table1[k1] == elem {
+		return true
+	} else if ht.table2[k2] == elem {
+		return true
+	}
+
+	return false
 }

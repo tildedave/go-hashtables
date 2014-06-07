@@ -57,3 +57,23 @@ func TestInsert(t *testing.T) {
 		t.Errorf("First value should have been inserted into second table.")
 	}
 }
+
+func TestInsertAndContains(t *testing.T) {
+	table := New(22, 0)
+	table.hash1 = one
+	table.hash2 = two
+
+	table.Insert(Element{20})
+	if table.Contains(Element{20}) != true {
+		t.Errorf("Table did not contain element.")
+	}
+
+	table.Insert(Element{31})
+	if table.Contains(Element{31}) != true {
+		t.Errorf("Table did not contain element.")
+	}
+
+	if table.Contains(Element{73}) != false {
+		t.Errorf("Table should not have contained non-inserted element.")
+	}
+}
