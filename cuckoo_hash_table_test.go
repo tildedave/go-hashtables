@@ -77,3 +77,22 @@ func TestInsertAndContains(t *testing.T) {
 		t.Errorf("Table should not have contained non-inserted element.")
 	}
 }
+
+func TestRemove(t *testing.T) {
+	table := New(22, 0)
+	table.hash1 = one
+	table.hash2 = two
+
+	table.Insert(Element{20})
+	table.Insert(Element{31})
+	table.Remove(Element{31})
+	table.Remove(Element{20})
+
+	if table.Contains(Element{31}) {
+		t.Errorf("Table should have removed element.")
+	}
+
+	if table.Contains(Element{20}) {
+		t.Errorf("Table should have removed element.")
+	}
+}

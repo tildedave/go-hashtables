@@ -8,6 +8,6 @@ type HashFunc func(elem Element) int
 
 type HashTable interface {
 	Insert(elem Element)
-	Delete(elem Element)
+	Remove(elem Element)
 	Contains(elem Element) bool
 }

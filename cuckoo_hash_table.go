@@ -96,12 +96,29 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 
 func (ht *CuckooHashTable) Contains(elem Element) bool {
 	k1, k2 := ht.hash1(elem), ht.hash2(elem)
+	log.Printf("Checking for %v in table (k1 = %d, k2 = %d)", elem, k1, k2)
 
 	if ht.table1[k1] == elem {
+		log.Printf("Found %v at table1[%d]", elem, k1)
 		return true
 	} else if ht.table2[k2] == elem {
+		log.Printf("Found %v at table2[%d]", elem, k2)
 		return true
 	}
 
+	log.Printf("Did not find %v in table", elem)
 	return false
+}
+
+func (ht *CuckooHashTable) Remove(elem Element) {
+	k1, k2 := ht.hash1(elem), ht.hash2(elem)
+	log.Printf("Removing %v from table (k1 = %d, k2 = %d)", elem, k1, k2)
+
+	if ht.table1[k1] == elem {
+		log.Printf("Removing %v from table1[%d]", elem, k1)
+		ht.table1[k1] = Element{nil}
+	} else if ht.table2[k2] == elem {
+		log.Printf("Removing %v from table2[%d]", elem, k2)
+		ht.table2[k2] = Element{nil}
+	}
 }
