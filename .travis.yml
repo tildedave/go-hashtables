@@ -1,1 +1,4 @@
-Some hash table implementations in Go
+language: go
+
+go:
+  - 1.2
