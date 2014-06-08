@@ -11,3 +11,6 @@ type HashTable interface {
 	Remove(elem Element)
 	Contains(elem Element) bool
 }
+
+func main() {
+}
