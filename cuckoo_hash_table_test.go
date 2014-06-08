@@ -4,14 +4,14 @@ import (
 	"testing"
 )
 
-func one(elem Element) int {
+func one(elem Element) uint32 {
 	k := elem.Value.(int)
-	return k % 11
+	return uint32(k % 11)
 }
 
-func two(elem Element) int {
+func two(elem Element) uint32 {
 	k := elem.Value.(int)
-	return (k / 11) % 11
+	return uint32((k / 11) % 11)
 }
 
 func TestLog2(t *testing.T) {
@@ -124,6 +124,24 @@ func TestInsertNeedsToLoop(t *testing.T) {
 	for _, item := range items {
 		if !table.Contains(Element{item}) {
 			t.Errorf("Table should have contained element.")
+		}
+	}
+}
+
+func TestInsertNeedsToRebuild(t *testing.T) {
+	table := New(22, 0)
+	table.hash1 = one
+	table.hash2 = two
+
+	items := []int{20, 50, 53, 75, 100, 67, 105, 3, 36, 39, 6}
+
+	for _, item := range items {
+		table.Insert(Element{item})
+	}
+
+	for _, item := range items {
+		if !table.Contains(Element{item}) {
+			t.Errorf("Table should have contained element %v.", item)
 		}
 	}
 }

@@ -11,10 +11,10 @@ const MAX_LOOPS = 10
 type CuckooHashTable struct {
 	table1 []Element
 	table2 []Element
+	hash1  HashFunc
+	hash2  HashFunc
 
-	rand  *rand.Rand
-	hash1 HashFunc
-	hash2 HashFunc
+	rand *rand.Rand
 }
 
 func log2(size int) uint {
@@ -34,14 +34,16 @@ func generateHashFunction(r *rand.Rand, size int) HashFunc {
 	//    HashCode = ((HIGH + A) * (LOW * B)) / (2^(32 - k))
 	// For A, B random
 
-	return func(elem Element) int {
-		value := elem.Value.(int32)
-		high := value >> 16
-		low := value & 0x0000FFFF
-		A := r.Int31()
-		B := r.Int31()
+	A := uint(r.Uint32())
+	B := uint(r.Uint32())
 
-		return int((high + A) + (low+B)>>(2^(32-log2(size))))
+	return func(elem Element) uint32 {
+		value := elem.Value.(int)
+		high := uint(value >> 16)
+		low := uint(value & 0x0000FFFF)
+
+		hash := uint32(high*A + low*B)
+		return hash >> (32 - log2(size))
 	}
 }
 
@@ -73,6 +75,14 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 		return
 	}
 
+	success := ht.doInsert(elem)
+	if !success {
+		ht.rehash()
+		ht.Insert(elem)
+	}
+}
+
+func (ht *CuckooHashTable) doInsert(elem Element) bool {
 	var displacedElem Element
 
 	loop := 0
@@ -82,7 +92,7 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 		if ht.table1[k1].Value == nil {
 			log.Printf("Setting table1[%d] = %v", k1, elem)
 			ht.table1[k1] = elem
-			return
+			return true
 		}
 
 		displacedElem = ht.table1[k1]
@@ -96,7 +106,7 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 		if ht.table2[k2].Value == nil {
 			log.Printf("Setting table2[%d] = %v", k2, elem)
 			ht.table2[k2] = elem
-			return
+			return true
 		}
 
 		displacedElem = ht.table2[k2]
@@ -105,7 +115,36 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 		elem = displacedElem
 	}
 
-	panic("Needed to rebuild hash table")
+	log.Printf("Failed to insert %v into table", elem)
+	return false
+}
+
+func (ht *CuckooHashTable) rehash() {
+	size := ht.Size()
+	items := make([]Element, 0, size)
+	for _, item := range append(ht.table1, ht.table2...) {
+		if item.Value != nil {
+			items = append(items, item)
+		}
+	}
+
+redo:
+	for {
+		ht.table1 = make([]Element, size/2)
+		ht.table2 = make([]Element, size/2)
+
+		ht.hash1 = generateHashFunction(ht.rand, size/2)
+		ht.hash2 = generateHashFunction(ht.rand, size/2)
+
+		for _, item := range items {
+			success := ht.doInsert(item)
+			if success == false {
+				continue redo
+			}
+		}
+
+		return
+	}
 }
 
 func (ht *CuckooHashTable) Contains(elem Element) bool {

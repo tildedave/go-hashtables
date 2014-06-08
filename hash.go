@@ -4,7 +4,7 @@ type Element struct {
 	Value interface{}
 }
 
-type HashFunc func(elem Element) int
+type HashFunc func(elem Element) uint32
 
 type HashTable interface {
 	Insert(elem Element)
