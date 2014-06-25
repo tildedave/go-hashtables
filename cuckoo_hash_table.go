@@ -75,14 +75,15 @@ func (ht *CuckooHashTable) Insert(elem Element) {
 		return
 	}
 
-	success := ht.doInsert(elem)
+	success, failedElem := ht.doInsert(elem)
 	if !success {
+		log.Printf("Must choose new hash functions in order to insert %v", failedElem)
 		ht.rehash()
-		ht.Insert(elem)
+		ht.Insert(failedElem)
 	}
 }
 
-func (ht *CuckooHashTable) doInsert(elem Element) bool {
+func (ht *CuckooHashTable) doInsert(elem Element) (bool, Element) {
 	var displacedElem Element
 
 	loop := 0
@@ -92,7 +93,7 @@ func (ht *CuckooHashTable) doInsert(elem Element) bool {
 		if ht.table1[k1].Value == nil {
 			log.Printf("Setting table1[%d] = %v", k1, elem)
 			ht.table1[k1] = elem
-			return true
+			return true, Element{}
 		}
 
 		displacedElem = ht.table1[k1]
@@ -106,7 +107,7 @@ func (ht *CuckooHashTable) doInsert(elem Element) bool {
 		if ht.table2[k2].Value == nil {
 			log.Printf("Setting table2[%d] = %v", k2, elem)
 			ht.table2[k2] = elem
-			return true
+			return true, Element{}
 		}
 
 		displacedElem = ht.table2[k2]
@@ -116,7 +117,7 @@ func (ht *CuckooHashTable) doInsert(elem Element) bool {
 	}
 
 	log.Printf("Failed to insert %v into table", elem)
-	return false
+	return false, elem
 }
 
 func (ht *CuckooHashTable) rehash() {
@@ -137,7 +138,7 @@ redo:
 		ht.hash2 = generateHashFunction(ht.rand, size/2)
 
 		for _, item := range items {
-			success := ht.doInsert(item)
+			success, _ := ht.doInsert(item)
 			if success == false {
 				continue redo
 			}
